@@ -1,21 +1,26 @@
 # Load the data
 import sklearn.datasets
 import matplotlib.pyplot as plt
-import matplotlib
-import sklearn.cluster as cl
 import numpy as np
 import random
+import math
 
-EPSILON = 0
 
-data, label = sklearn.datasets.make_circles(20, 0, noise=0.15, factor=0.2)
+def distance(d1, d2):
+    dx = d1[0] - d2[0]
+    dy = d1[1] - d2[0]
+    return math.sqrt(dx * dx + dy * dy)
+
+
+EPSILON = 10
+
+data, label = sklearn.datasets.make_circles(500, 0, noise=0.15, factor=0.1)
 
 K = np.zeros((len(data), len(data)))
 
 for i in range(len(data)):
     for j in range(len(data)):
-        K[i][j] = np.linalg.norm(data[i] - data[j])
-
+        K[i][j] = distance(data[i], data[j])
 
 real_labels = [0, 1]
 
@@ -26,7 +31,6 @@ cur_label = [[]]
 for i in range(len(data)):
     cur_label[t].append(random.choice(real_labels))
 
-
 while True:
     t = t + 1
 
@@ -36,11 +40,11 @@ while True:
         n = 0
         for r in range(len(K)):
             for c in range(len(K[r])):
-                if cur_label[t-1][r] == cur_label[t-1][c] and cur_label[t-1][r] == real_labels[i]:
+                if cur_label[t - 1][r] == real_labels[i] and cur_label[t - 1][c] == real_labels[i]:
                     cur_sq += K[r][c]
                     n += 1
         if n > 0:
-            cur_sq /= n*n*1.0
+            cur_sq /= n * n
 
         sqnorm.append(cur_sq)
 
@@ -48,14 +52,15 @@ while True:
     for i in range(len(data)):
         avg.append([])
         for j in range(len(real_labels)):
-            y, n = 0, 0
+            y = 0
+            n = 0
             for k in range(len(data)):
-                if real_labels[j] == cur_label[t-1][k]:
+                if real_labels[j] == cur_label[t - 1][k]:
                     y += K[i][k]
                     n += 1
 
             if n > 0:
-                y /= n*1.0
+                y /= n
 
             avg[i].append(y)
 
@@ -67,30 +72,25 @@ while True:
 
     cur_label.append([])
     for j in range(len(data)):
-        min_index = 0
-        for k in range(len(real_labels)):
-            if min_index == 0 or d[j][k] > d[j][min_index]:
+        min_index = -1
+        for k in range(0, len(real_labels)):
+            if min_index == -1 or d[j][k] < d[j][min_index]:
                 min_index = k
 
         cur_label[t].append(min_index)
 
     flag = 0
     for i in range(len(data)):
-        if cur_label[t][i] == cur_label[t-1][i]:
+        if cur_label[t][i] == cur_label[t - 1][i]:
             flag += 1
 
     if flag - len(data) <= EPSILON:
         break
 
-print("repeat time:" , t)
+print("repeat time:", t)
 
-plt.scatter(data[:,0], data[:,1], s = 30 , c = cur_label[t], cmap=plt.cm.Spectral)
+plt.scatter(data[:, 0], data[:, 1], s=60, c=cur_label[t], cmap=plt.cm.Spectral)
 plt.show()
-
-
-
-
-
 
 #
 # kmeans = cl.KMeans(n_clusters=2, random_state=0).fit(two_moon_x)
@@ -101,7 +101,3 @@ plt.show()
 # matplotlib.style.use('ggplot') #makes plots look pretty
 # plt.scatter(two_moon_x[:,0],two_moon_x[:,1], s = 30 , c = labels, cmap=plt.cm.Spectral)
 # plt.show()
-
-
-
-
