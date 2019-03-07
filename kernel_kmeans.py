@@ -6,11 +6,11 @@ import sklearn.cluster as cl
 import numpy as np
 import random
 
-data, label = sklearn.datasets.make_circles(500, 0, noise=0.15, factor=0.2)
+EPSILON = 0
 
-K = np.zeros((len(data) , len(data)))
+data, label = sklearn.datasets.make_circles(20, 0, noise=0.15, factor=0.2)
 
-
+K = np.zeros((len(data), len(data)))
 
 for i in range(len(data)):
     for j in range(len(data)):
@@ -21,10 +21,8 @@ real_labels = [0, 1]
 
 t = 0
 
-cur_label = []
+cur_label = [[]]
 
-
-cur_label.append([])
 for i in range(len(data)):
     cur_label[t].append(random.choice(real_labels))
 
@@ -42,16 +40,51 @@ while True:
                     cur_sq += K[r][c]
                     n += 1
         if n > 0:
-            cur_sq /= (n*n)
+            cur_sq /= n*n*1.0
 
-        sqnorm[i] = cur_sq
+        sqnorm.append(cur_sq)
 
+    avg = []
+    for i in range(len(data)):
+        avg.append([])
+        for j in range(len(real_labels)):
+            y, n = 0, 0
+            for k in range(len(data)):
+                if real_labels[j] == cur_label[t-1][k]:
+                    y += K[i][k]
+                    n += 1
 
+            if n > 0:
+                y /= n*1.0
 
+            avg[i].append(y)
 
+    d = []
+    for j in range(len(data)):
+        d.append([])
+        for i in range(len(real_labels)):
+            d[j].append(sqnorm[i] - 2 * avg[j][i])
 
+    cur_label.append([])
+    for j in range(len(data)):
+        min_index = 0
+        for k in range(len(real_labels)):
+            if min_index == 0 or d[j][k] > d[j][min_index]:
+                min_index = k
 
-plt.scatter(data[:,0], data[:,1], s = 30 , c = cur_label, cmap=plt.cm.Spectral)
+        cur_label[t].append(min_index)
+
+    flag = 0
+    for i in range(len(data)):
+        if cur_label[t][i] == cur_label[t-1][i]:
+            flag += 1
+
+    if flag - len(data) <= EPSILON:
+        break
+
+print("repeat time:" , t)
+
+plt.scatter(data[:,0], data[:,1], s = 30 , c = cur_label[t], cmap=plt.cm.Spectral)
 plt.show()
 
 
